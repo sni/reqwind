@@ -13,6 +13,17 @@ every page instead. No database, server, or runtime network requests.
 
 Requires Go 1.23+ on Linux.
 
+Prebuilt Linux binaries are attached to GitHub Releases. Choose `amd64`
+(x86-64) or `arm64` (ARM64). Download and unpack the archive.
+Replace `<version>` and `<arch>` below:
+
+```sh
+tar -xzf reqwind-<version>-linux-<arch>.tar.gz
+sudo install -m 0755 reqwind /usr/local/bin/reqwind
+```
+
+The binaries need no C runtime. To build from source:
+
 ```sh
 make
 # Without make: go build -o reqwind ./cmd/reqwind
@@ -194,6 +205,37 @@ The project keeps Go's JSON library. In a separate comparison on local state,
 `goccy/go-json` v0.12.0 cut the largest bucket's JSON time from about 1.2 to
 0.65 ms for encoding and 1.5 to 0.87 ms for decoding, but used more memory
 for decoding. These small savings do not yet justify a new dependency.
+
+## CI and releases
+
+See [CHANGELOG.md](CHANGELOG.md) for changes.
+
+GitHub Actions runs tests with the race detector, vet, formatting checks,
+lint, vulnerability checks, and benchmarks on pushes and pull requests.
+It also builds Linux `amd64` and `arm64` archives.
+Download these from the workflow's artifacts section. You can also start
+the Builds workflow by hand.
+
+Dependabot checks GitHub Actions daily at 04:00 UTC and Go modules weekly
+on Monday at 10:00 UTC. It opens pull requests for updates; merges stay manual.
+
+To prepare a release, tag a commit and push the tag:
+
+```sh
+git tag v0.0.1
+git push origin v0.0.1
+```
+
+Use the next release version in place of `v0.0.1`. After all checks and
+builds pass, the workflow creates a **draft** release with generated notes
+and binary archives. Review the notes and publish it on GitHub.
+The workflow never publishes a release on its own. It uses `GITHUB_TOKEN`;
+no extra secrets are needed. Repository policy must allow write access to
+release contents.
+
+Tagged binaries report the tag version with `-version`. Other builds use
+the nearest version tag plus the commit distance and ID, or just the commit
+ID if no version tag exists.
 
 ## License
 

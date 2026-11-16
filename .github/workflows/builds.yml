@@ -1,0 +1,97 @@
+name: Builds
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@main
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-node@main
+        with:
+          node-version: '24'
+      - run: make check golangci govulncheck benchmark
+
+  get-version:
+    runs-on: ubuntu-26.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="$(git describe --tags --match 'v[0-9]*' --always)"
+            version="${version#v}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: get-version
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    env:
+      CGO_ENABLED: '0'
+      GOOS: linux
+      GOARCH: ${{ matrix.arch }}
+      VERSION: ${{ needs.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@main
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@main
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Build archive
+        shell: bash
+        run: |
+          make build BUILD_FLAGS="-trimpath -ldflags=-X=reqwind/pkg/reqwind.Version=$VERSION"
+          archive="reqwind-$VERSION-linux-$GOARCH.tar.gz"
+          tar -czf "$archive" reqwind README.md LICENSE assets/LICENSE assets/NOTICE assets/SOURCES.txt
+      - uses: actions/upload-artifact@main
+        with:
+          name: reqwind-${{ env.VERSION }}-linux-${{ matrix.arch }}
+          path: "*.tar.gz"
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [check, get-version, build]
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@main
+        with:
+          pattern: reqwind-*
+          path: release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: v${{ needs.get-version.outputs.version }}
+          draft: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release/*.tar.gz
