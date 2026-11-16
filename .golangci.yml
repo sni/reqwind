@@ -1,0 +1,44 @@
+version: "2"
+linters:
+  enable:
+    - gosec
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - (*compress/gzip.Reader).Close # read-only stream; checksum errors come from Read
+    gosec:
+      excludes:
+        - G304 # paths come from user CLI flags and test fixtures
+        - G104 # error handling is covered by errcheck
+    staticcheck:
+      checks:
+        - "all"
+        - "-QF1001" # De Morgan style hints, not bugs
+        - "-ST1000" # package comment style
+  exclusions:
+    rules:
+      # These renderers escape labels and JSON before constructing trusted HTML.
+      # Asset file names are also not credentials (G101 false positive).
+      - path: pkg/reqwind/(charts|paths)\.go
+        linters: [gosec]
+        text: 'G203|G101'
+      # Only embedded branding bytes become trusted data URLs.
+      - path: pkg/reqwind/report\.go
+        linters: [gosec]
+        text: G203
+        source: 'template\.URL\(.*assets\.(Logo|Icon)'
+      # GeoIP runs local tools with validated IP arguments, without a shell.
+      - path: pkg/reqwind/geo\.go
+        linters: [gosec]
+        text: G204
+      # Read handles, advisory locks, and temporary-file cleanup only.
+      - linters: [errcheck]
+        source: 'defer .*\.Close\(|defer syscall\.Flock\(|defer os\.Remove\('
+    # test fixtures: unchecked errors, loose permissions, weak random seed
+    paths:
+      - _test\.go
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

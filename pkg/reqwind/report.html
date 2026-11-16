@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en" data-palette="{{.Palette}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="{{.Favicon}}">
+{{if .Live}}
+<meta http-equiv="refresh" content="5">
+{{end}}
+<title>reqwind · {{.Title}}</title>
+<style>
+:root{--bg:#f6f8fa;--fg:#1c2128;--muted:#57606a;--card:#fff;--border:#d0d7de;--accent:#0969da;--accent2:#8250df;--warn:#bc4c00}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--muted:#8b949e;--card:#161b22;--border:#30363d;--accent:#58a6ff;--accent2:#bc8cff;--warn:#ffa657}}
+[data-palette=forest]{--accent:#1a7f37;--accent2:#2da44e}
+@media (prefers-color-scheme:dark){[data-palette=forest]{--accent:#3fb950;--accent2:#56d364}}
+[data-palette=ember]{--accent:#bc4c00;--accent2:#d1243f}
+@media (prefers-color-scheme:dark){[data-palette=ember]{--accent:#ffa657;--accent2:#ff7b72}}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{margin:0 auto;padding:1.25rem 1.5rem 2rem}
+h1{margin:.25rem 0;font-size:1.7rem}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--border);box-shadow:0 1px 6px #0001}
+header.wrap{padding-bottom:.75rem}
+.header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.brand{display:flex;align-items:center;gap:.6rem;margin:.25rem 0;min-width:0}
+.brand>a{display:flex;align-items:center;gap:.6rem;min-width:0;text-decoration:none;color:inherit}
+.brand img{width:138px;height:36px;flex:none;background:#fff;border-radius:4px}
+.brand h1{margin:0;font-size:1.5rem;min-width:0;overflow-wrap:anywhere}
+.period{margin:0;font-size:.85rem;color:var(--muted)}
+.actions{display:flex;align-items:center;gap:.5rem;flex:none}
+.site-select{max-width:220px;padding:.35rem .5rem;background:var(--card);border:1px solid var(--border);border-radius:6px;font-size:.85rem;color:var(--fg)}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;padding:.35rem;width:2.1rem;height:2.1rem;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--fg);cursor:pointer}
+.icon-btn:hover{border-color:var(--accent)}
+.icon-btn svg{width:1.05rem;height:1.05rem;flex:none}
+h2{margin:0 0 .5rem;font-size:.95rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+a{color:var(--accent);text-underline-offset:.2em}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.summary{margin-bottom:1.5rem;overflow-x:auto}
+.summary td:first-child{overflow-wrap:anywhere}
+.meta{color:var(--muted)}
+.warn{color:var(--warn)}
+.cards{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:1rem 0 1.5rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem}
+.card .num{display:block;font-size:1.55rem;font-weight:700}
+.card .lbl{font-size:.82rem;color:var(--muted)}
+figure{margin:0 0 1.5rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem}
+figcaption{font-size:.85rem;color:var(--muted);margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;grid-template-columns:minmax(0,1fr);margin-top:1.5rem}
+.grid>div{min-width:0;overflow-x:auto}
+.grid .row{display:grid;gap:1rem;grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:start}
+.grid .row>h2{grid-column:1/-1}
+.grid .row>ol,.grid .row>.empty{grid-column:1;grid-row:2;min-width:0}
+.grid .row>.rw-pie{grid-column:2;grid-row:2;min-width:0;width:100%}
+.rw-pie{overflow:visible}
+table.report-summary{table-layout:fixed;width:100%}
+table.report-summary th:first-child{width:45%;overflow-wrap:anywhere}
+table.report-summary th{cursor:pointer;user-select:none}
+table.report-summary th[aria-sort]{text-decoration:underline}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:.45rem .6rem;border-bottom:1px solid var(--border);text-align:left}
+tbody tr:hover,.tops li:hover{background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+th{color:var(--muted);font-weight:600}
+thead th{text-transform:uppercase}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+caption{caption-side:top;text-align:left;font-size:.85rem;color:var(--muted);margin-bottom:.4rem}
+.tops ol{margin:0;padding-left:1.2rem;list-style:none}
+.tops li{padding:.25rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:1rem;overflow-wrap:anywhere}
+.tops li>span:first-child{min-width:0}
+.tops .n{flex:none}
+.sidebar{position:fixed;top:1rem;left:1rem;z-index:30;width:170px;max-height:calc(100vh - 2rem);overflow:auto;padding:.8rem;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.sidebar a{display:block;padding:.25rem 0;font-size:.85rem}
+.sidebar a:hover{background:color-mix(in srgb,var(--accent) 12%,var(--card));border-radius:4px}
+.path-tree{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem}
+.path-tree ul{list-style:none;margin:.4rem 0 .4rem .5rem;padding-left:1.2rem;border-left:1px solid var(--border)}
+.path-tree li{padding:.2rem 0}
+.path-tree li:hover{background:color-mix(in srgb,var(--accent) 10%,var(--card));border-radius:4px}
+.path-tree summary{cursor:pointer;display:flex;align-items:center;padding:.3rem .4rem;border-radius:5px;list-style:none}
+.path-tree summary::-webkit-details-marker{display:none}
+.path-tree summary::marker{content:""}
+.path-tree .path-row{display:flex;align-items:center;gap:.5rem;min-width:0;overflow-wrap:anywhere}
+.path-tree summary>.path-row{flex:1}
+.path-tree li>.path-row{width:100%;padding:.3rem .4rem}
+.path-tree .path-header{padding:.3rem .4rem;font-weight:600;color:var(--muted)}
+.path-tree .path-counts{margin-left:auto;white-space:nowrap;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.path-tree .path-counts>span{display:inline-block;text-align:right}
+.path-tree .path-counts>span:first-child{width:5.5rem}
+.path-tree .path-counts>span:nth-child(2){width:6.5rem}
+/* The header's empty bar span and every row's meter share the column width. */
+.path-tree .path-counts .bar,.path-tree .path-counts meter{width:5rem;margin-left:1rem}
+.path-tree .pi{display:inline-block;width:1em;height:1em;flex:none;color:var(--muted);background-color:currentColor;-webkit-mask:center/contain no-repeat;mask:center/contain no-repeat}
+.path-tree .pi-folder{-webkit-mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>");mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>")}
+.path-tree .pi-file{-webkit-mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z'/></svg>");mask-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z'/></svg>")}
+.path-tree summary>.path-row .pi{color:var(--accent)}
+.path-tree meter{width:100%;height:.6rem;flex:none;accent-color:var(--accent)}
+.summary>details>summary{cursor:pointer;color:var(--muted);margin:.5rem 0}
+.path-tree summary:hover{background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.path-tree summary::marker{color:var(--accent)}
+.path-tree .meta,.path-tree .n{margin-left:1rem;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.path-tree .path-row>.n{margin-left:auto;text-align:right}
+:target{scroll-margin-top:4.5rem}
+.more-btn{margin-top:.5rem;padding:.3rem .6rem;background:var(--card);border:1px solid var(--border);border-radius:6px;font-size:.85rem;color:var(--fg);cursor:pointer}
+@media(min-width:1000px){body{padding-left:195px}}
+@media(max-width:999px){.sidebar{position:static;width:auto;margin:1rem 1.5rem}.sidebar a{display:inline-block;margin-right:1rem}}
+.tops li:last-child{border-bottom:0}
+.tops .n{color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-style:italic}
+footer{margin-top:2rem;color:var(--muted);font-size:.82rem}
+.settings{position:relative;flex:none}
+.settings>summary{cursor:pointer}
+.settings-panel{position:absolute;right:0;top:calc(100% + .4rem);z-index:10;min-width:200px;padding:.8rem;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px #0002}
+.settings-panel label{display:block;margin-bottom:.4rem;font-size:.85rem}
+.settings-panel select{width:100%;font-size:.9rem;padding:.25rem;border:1px solid var(--border);border-radius:5px;background:var(--card);color:var(--fg)}
+.settings-panel .theme-row{display:flex;align-items:center;gap:.4rem;margin-top:.5rem;font-size:.85rem}
+.settings-panel .theme-row .icon-btn{padding:.25rem;width:1.7rem;height:1.7rem}
+.settings-panel .theme-row .theme-name{flex:1;color:var(--muted)}
+/* A manual theme choice wins over the OS media queries above; placed last
+   so it also wins over the palette accent rules. */
+:root[data-theme=light]{--bg:#f6f8fa;--fg:#1c2128;--muted:#57606a;--card:#fff;--border:#d0d7de;--accent:#0969da;--accent2:#8250df;--warn:#bc4c00}
+:root[data-theme=dark]{--bg:#0d1117;--fg:#e6edf3;--muted:#8b949e;--card:#161b22;--border:#30363d;--accent:#58a6ff;--accent2:#bc8cff;--warn:#ffa657}
+:root[data-palette=forest][data-theme=light]{--accent:#1a7f37;--accent2:#2da44e}
+:root[data-palette=forest][data-theme=dark]{--accent:#3fb950;--accent2:#56d364}
+:root[data-palette=ember][data-theme=light]{--accent:#bc4c00;--accent2:#d1243f}
+:root[data-palette=ember][data-theme=dark]{--accent:#ffa657;--accent2:#ff7b72}
+</style>
+</head>
+<body>
+<nav class="sidebar" aria-label="Report sections"><h2>Jump to</h2>
+<a href="#summary">Summary</a><a href="#activity-chart">Requests / visitors / files / pages</a>{{if .HasVhostCharts}}<a href="#vhost-requests-chart">Requests by host</a><a href="#vhost-traffic-chart">Traffic by host</a>{{end}}<a href="#traffic-chart">Traffic</a><a href="#visits-chart">Visits</a><a href="#hours-chart">Hours</a><a href="#country-map">World map</a><a href="#rw-chart-os">Operating systems</a><a href="#rw-chart-status">Status codes</a>{{if .ShowDrilldown}}<a href="#path-drilldown">Path drilldown</a>{{end}}<a href="#top-paths">Top paths</a><a href="#paths-traffic">Paths by traffic</a><a href="#referrers">Referrers</a><a href="#user-agents">User agents</a><a href="#status-codes">Status codes</a><a href="#clients-requests">Clients by requests</a><a href="#clients-traffic">Clients by traffic</a><a href="#search-terms">Search terms</a><a href="#countries">Countries</a>
+<a href="#top-error-paths">Top error paths</a>
+</nav>
+<header class="wrap">
+<div class="header-row"><div class="brand">{{if .IndexHref}}<a href="{{.IndexHref}}" aria-label="All sites"><img src="{{.Logo}}" alt="reqwind" width="138" height="36"><div><h1>{{.Title}}</h1>{{if .Period}}<p class="period">{{.Period}}</p>{{end}}</div></a>{{else}}<img src="{{.Logo}}" alt="reqwind" width="138" height="36"><div><h1>{{.Title}}</h1>{{if .Period}}<p class="period">{{.Period}}</p>{{end}}</div>{{end}}</div>
+<div class="actions">
+{{if and .Vhosts (gt (len .Vhosts) 1)}}<select id="site-select" class="site-select" aria-label="Site" onchange="var v=this.value;if(v)location.href=v">{{if .IndexHref}}<option value="{{.IndexHref}}">All sites · index</option>{{else}}<option value="" selected>All sites</option>{{end}}{{range .Vhosts}}<option value="{{.Href}}"{{if eq .Name $.Title}} selected{{end}}>{{.Name}}</option>{{end}}</select>{{end}}
+<details class="settings"><summary class="icon-btn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></summary><div class="settings-panel"><label for="palette-select">Colour scheme</label><select id="palette-select" aria-label="Colour scheme"><option value="ocean"{{if eq .Palette "ocean"}} selected{{end}}>Ocean</option><option value="forest"{{if eq .Palette "forest"}} selected{{end}}>Forest</option><option value="ember"{{if eq .Palette "ember"}} selected{{end}}>Ember</option></select><div class="theme-row"><label>Light/dark</label><button type="button" class="icon-btn" id="theme-toggle" aria-label="Theme: auto" title="Theme: auto, click to switch"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 1 0 12z"/></svg></button><span class="theme-name" id="theme-name">Auto</span></div></div></details>
+</div></div>
+</header>
+<main class="wrap">
+<section id="summary" class="cards" aria-label="Summary">
+<div class="card"><span class="num" title="{{.T.Requests}}">{{group .T.Requests}}</span><span class="lbl">requests (hits)</span></div>
+<div class="card"><span class="num" title="{{.T.Bytes}}">{{human .T.Bytes}}</span><span class="lbl">bytes</span></div>
+<div class="card"><span class="num" title="{{.T.Files}}">{{group .T.Files}}</span><span class="lbl">files</span></div>
+<div class="card"><span class="num" title="{{.T.Pages}}">{{group .T.Pages}}</span><span class="lbl">pages</span></div>
+<div class="card"><span class="num" title="{{.T.Visits}}">{{group .T.Visits}}</span><span class="lbl">visits</span></div>
+<div class="card"><span class="num" title="{{.T.Visitors}}">{{group .T.Visitors}}</span><span class="lbl">unique visitors</span></div>
+</section>
+{{if .VhostSummary}}<section class="summary"><h2>Virtual hosts and log sources</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Virtual host"}}{{template "summary" .VhostSummary}}</table></section>{{end}}
+{{if .Years}}<section class="summary"><h2>Yearly summary</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Period"}}{{template "summary" .Years}}</table></section>{{end}}
+{{if .Months}}<section class="summary" id="monthly-summary"><h2>Monthly summary</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Period"}}{{template "summary" .Months}}</table></section>{{end}}
+{{if and .HasDays .AvgDenominator}}
+<section class="summary"><h2>Daily averages</h2><p class="meta">Across {{.AvgDenominator}} calendar days, including zero-traffic gaps.</p>
+<table><thead><tr><th scope="col">Metric</th><th scope="col" class="num">Per calendar day</th><th scope="col" class="num">Rate</th></tr></thead><tbody>
+<tr><th scope="row">Hits</th><td class="num">{{printf "%.2f" .AvgRequests}}</td><td class="num">{{printf "%.6f" (perSecond .AvgRequests)}} /s</td></tr>
+<tr><th scope="row">Files</th><td class="num">{{printf "%.2f" .AvgFiles}}</td></tr>
+<tr><th scope="row">Pages</th><td class="num">{{printf "%.2f" .AvgPages}}</td></tr>
+<tr><th scope="row">Visits</th><td class="num">{{printf "%.2f" .AvgVisits}}</td></tr>
+<tr><th scope="row">Daily unique visitors</th><td class="num">{{printf "%.2f" .AvgVisitors}}</td></tr>
+<tr><th scope="row">Traffic</th><td class="num">{{averageBytes .AvgBytes}}</td><td class="num">{{byteRate (perSecond .AvgBytes)}}</td></tr>
+</tbody></table></section>
+{{end}}
+{{.InteractiveCharts}}
+{{if .ShowDrilldown}}<section id="path-drilldown" class="summary"><h2>Request paths</h2>{{.PathDrilldown}}</section>{{end}}
+<section class="grid">
+<div class="tops" id="top-paths">
+<h2>Top paths</h2>
+{{if .TopPaths}}<ol>{{range .TopPaths}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}}">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No data.</p>{{end}}
+</div>
+<div class="tops" id="paths-traffic">
+<h2>Top paths by traffic</h2>
+{{if .TopPathsBytes}}<table><thead><tr><th scope="col">Path</th><th scope="col" class="num">Traffic</th></tr></thead><tbody>{{range .TopPathsBytes}}<tr><td>{{.Name}}</td><td class="num" title="{{.Count}} bytes">{{human .Count}}</td></tr>{{end}}</tbody></table>
+{{else}}<p class="empty">No path traffic data.</p>{{end}}
+</div>
+<div class="tops" id="top-error-paths">
+<h2>Top error paths</h2>
+<p class="meta">Requests with 4xx or 5xx responses, except 401.</p>
+{{if .TopErrorPaths}}<ol>{{range .TopErrorPaths}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}} failed requests">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No failed path requests.</p>{{end}}
+</div>
+<div class="tops" id="referrers">
+<h2>External referrers</h2>
+{{if .TopRefs}}<ol>{{range .TopRefs}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}}">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No data.</p>{{end}}
+</div>
+<div class="tops row" id="user-agents">
+<h2>User agents</h2>
+<div class="rw-chart rw-pie" id="rw-chart-os" style="height:180px" role="img" aria-label="Operating systems from user agents"></div>
+{{if .TopAgents}}<ol>{{range .TopAgents}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}}">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No data.</p>{{end}}
+</div>
+<div class="tops row" id="status-codes">
+<h2>Status codes</h2>
+<div class="rw-chart rw-pie" id="rw-chart-status" style="height:180px" role="img" aria-label="Requests by HTTP status range"></div>
+{{if .TopStatus}}<ol>{{range .TopStatus}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}}">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No data.</p>{{end}}
+</div>
+<div class="tops" id="clients-requests">
+<h2>Top clients by requests</h2>
+{{if hasRaw .TopClientsRequests}}<p class="meta">Raw client IPs.</p>{{else}}<p class="meta">Hashed identifiers — no raw IP is stored or shown.</p>{{end}}
+{{if .TopClientsRequests}}<ol>{{range .TopClientsRequests}}<li><span>{{.Name}}</span><span class="n" title="{{.Requests}}">{{group .Requests}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No client data.</p>{{end}}
+</div>
+<div class="tops" id="clients-traffic">
+<h2>Top clients by traffic</h2>
+{{if hasRaw .TopClientsBytes}}<p class="meta">Raw client IPs.</p>{{else}}<p class="meta">Hashed identifiers — no raw IP is stored or shown.</p>{{end}}
+{{if .TopClientsBytes}}<ol>{{range .TopClientsBytes}}<li><span>{{.Name}}</span><span class="n" title="{{.Bytes}}">{{human .Bytes}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No client data.</p>{{end}}
+</div>
+<div class="tops" id="search-terms">
+<h2>Search engine terms</h2>
+<p class="meta">Only terms exposed in recognized search-engine referrers are available. Most searches hide them.</p>
+{{if .TopTerms}}<ol>{{range .TopTerms}}<li><span>{{.Name}}</span><span class="n" title="{{.Count}}">{{group .Count}}</span></li>{{end}}</ol>
+{{else}}<p class="empty">No search terms available.</p>{{end}}
+</div>
+<div class="tops" id="countries">
+<h2>Countries</h2>
+{{if .TopCountries}}
+{{if not .GeoEnabled}}<p class="meta">Geolocation disabled for new records; existing country counts are shown.</p>{{end}}
+<table>
+<caption>Top countries by mapped request count (ISO country codes; Unknown when GeoIP could not resolve one)</caption>
+<thead><tr><th scope="col">Country</th><th scope="col" class="num">Requests</th></tr></thead>
+<tbody>
+{{range .TopCountries}}<tr><td>{{.Name}}</td><td class="num" title="{{.Count}}">{{group .Count}}</td></tr>
+{{end}}
+</tbody>
+</table>
+{{else if .GeoEnabled}}
+<p class="empty">No country data available.</p>
+{{else}}
+<p class="empty">Local GeoIP database not configured. Run with -geo-db to enable.</p>
+{{end}}
+</div>
+</section>
+</main>
+<footer class="wrap">generated by reqwind {{.Version}} · {{.Generated.Local.Format "2006-01-02 15:04:05 MST"}}</footer>
+<script>(function(){var a=["ocean","forest","ember"],root=document.documentElement,p=root.dataset.palette||"ocean",t="auto",s=document.getElementById("palette-select"),b=document.getElementById("theme-toggle");
+try{var q=localStorage.getItem("reqwind-palette");if(a.indexOf(q)>=0)p=q;var m=localStorage.getItem("reqwind-theme");if(m==="light"||m==="dark")t=m;}catch(x){}
+function os(){return window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"}
+function apply(){root.dataset.palette=p;root.dataset.theme=t==="auto"?os():t;if(b){var lbl=t[0].toUpperCase()+t.slice(1);b.setAttribute("aria-label","Theme: "+lbl+", click to switch");b.title="Theme: "+lbl;var n=document.getElementById("theme-name");if(n)n.textContent=lbl}}
+function saveTheme(){try{if(t==="auto")localStorage.removeItem("reqwind-theme");else localStorage.setItem("reqwind-theme",t)}catch(x){}}
+/* The path tree meters carry their accessible name here, not in the HTML,
+   so each of the 5000 rows stays short. */
+var tree=document.querySelector(".path-tree");
+if(tree)tree.querySelectorAll("meter").forEach(function(m){m.setAttribute("aria-label",m.textContent+" of retained prefix requests")});
+if(s){s.value=p;s.addEventListener("change",function(){var v=s.value;if(a.indexOf(v)<0)return;p=v;root.dataset.palette=v;try{localStorage.setItem("reqwind-palette",v)}catch(x){}})}
+if(b)b.addEventListener("click",function(){t=t==="auto"?"light":t==="light"?"dark":"auto";saveTheme();apply()});
+document.addEventListener("click",function(e){var st=document.querySelector(".settings");
+ if(st&&st.open&&!st.contains(e.target))st.open=false});
+apply();
+if(window.matchMedia)window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){if(t==="auto")apply()});
+})();
+</script>
+<script>/* Cap the monthly list at 12 rows; a "Show more" button reveals the rest. */
+(function(){var s=document.getElementById("monthly-summary");
+if(!s)return;
+var tb=s.querySelector("table"),rows=tb?tb.querySelectorAll("tbody tr"):[];
+if(rows.length<=12)return;
+var extra=rows.length-12,i;
+for(i=12;i<rows.length;i++)rows[i].style.display="none";
+var b=document.createElement("button");
+b.type="button";b.className="more-btn";b.textContent="Show "+extra+" more months";
+b.setAttribute("aria-expanded","false");
+b.addEventListener("click",function(){
+ var shown=b.getAttribute("aria-expanded")==="true";
+ for(var j=12;j<rows.length;j++)rows[j].style.display=shown?"none":"";
+ b.textContent=shown?"Show "+extra+" more months":"Show fewer";
+ b.setAttribute("aria-expanded",String(!shown))});
+s.appendChild(b);})();
+</script>
+<script>/* Click a column header to sort the summary tables by it; click again to reverse. */
+(function(){var ts=document.querySelectorAll("[class~=report-summary]");
+ts.forEach(function(tb){
+ var ths=tb.querySelectorAll("thead th"),n=ths.length;
+ if(!n)return;
+ var st=null,dir=null;
+ ths.forEach(function(th,i){th.setAttribute("tabindex","0");
+  function act(){dir=st!==i?-1:-(dir||1);
+   st=i;
+   ths.forEach(function(h,j){h.removeAttribute("aria-sort")});
+   th.setAttribute("aria-sort",dir>0?"descending":"ascending");
+   var rows=Array.prototype.slice.call(tb.querySelectorAll("tbody tr"));
+   rows.sort(function(a,b){var x=a.children[i]||{},y=b.children[i]||{};
+    if(i>0){var rx=(x.title||"").replace(/[^0-9-]/g,""),ry=(y.title||"").replace(/[^0-9-]/g,"");
+     return dir*(+rx)-dir*(+ry)}
+    return dir*String.prototype.localeCompare.call(x.textContent||"",y.textContent||"",undefined,{numeric:true})});
+   var tb2=rows[0]?rows[0].closest("tbody"):tb.querySelector("tbody");
+   rows.forEach(function(r){tb2.appendChild(r)})}
+  th.addEventListener("click",act);
+  th.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" ")act()})})});
+})();
+</script>
+</body>
+</html>
+{{define "summary-header"}}<thead><tr><th scope="col">{{.}}</th><th scope="col" class="num" title="requests">Requests</th><th scope="col" class="num">Traffic</th><th scope="col" class="num">Visitors</th></tr></thead>{{end}}
+{{define "summary"}}<tbody>{{range .}}<tr><th scope="row"><a href="{{.Href}}">{{.Name}}</a></th><td class="num" title="{{.Requests}}">{{group .Requests}}</td><td class="num" title="{{.Bytes}}">{{human .Bytes}}</td><td class="num" title="{{.Visitors}}">{{.Visitors}}</td></tr>{{end}}</tbody>{{end}}

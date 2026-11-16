@@ -1,0 +1,68 @@
+Bundled third-party assets and their licenses
+=============================================
+
+echarts.min.js
+  Project  : Apache ECharts, version 5.6.0
+  License  : Apache License, Version 2.0 (Apache-2.0)
+  Copyright: the Apache Software Foundation (ASF)
+  Source   : npm package echarts@5.6.0, file dist/echarts.min.js
+             https://registry.npmjs.org/echarts/-/echarts-5.6.0.tgz
+             (verified byte-identical, sha256 bf4a223524e40b77c304bec67e1222cf551f14880cf42c69dc046558e11c07b1)
+
+LICENSE
+  Full license text of Apache ECharts 5.6.0, including the Apache 2.0 body
+  and the "Apache ECharts Subcomponents" third-party notices (BSD 3-Clause
+  d3.js embeds). Source: official release
+  https://raw.githubusercontent.com/apache/echarts/5.6.0/LICENSE
+  (sha256 634293835b43a6dd2094fa39182a3d9a6b9ca43b7fdb9ac354e8037af2a3093a;
+   also identical to package/LICENSE of npm echarts@5.6.0)
+
+NOTICE
+  Copyright notice of Apache ECharts 5.6.0. Source: official release
+  https://raw.githubusercontent.com/apache/echarts/5.6.0/NOTICE
+  (sha256 fa99ac3af859d0e13166906dc53a73ad34a08898da7e8ae83407275496e9e30c;
+   also identical to package/NOTICE of npm echarts@5.6.0)
+
+world.geo.json
+  Project  : Apache ECharts map data (world), GeoJSON FeatureCollection
+  License  : Apache License, Version 2.0, as distributed with the package
+  Copyright: the Apache Software Foundation (ASF)
+  Source   : npm package echarts@4.9.0, file map/json/world.json
+             https://registry.npmjs.org/echarts/-/echarts-4.9.0.tgz
+             (verified byte-identical, sha256 049b334579e5a42d5d16c72d014d380e048e39fc1504049f212acb589484d2fa)
+  Note     : the 4.9.0 package ships no separate attribution file for the map
+             data; it is covered by the package-level Apache-2.0 LICENSE and
+             NOTICE. The file has no per-feature license header.
+
+logo.svg and icon.svg
+  Project : reqwind branding, original artwork
+  License : MIT, as distributed with reqwind
+
+These files are embedded into the reqwind binary so reports render with no
+network access. Generated pages do not embed the license text; the licenses
+and sources are documented here and in the README.
+
+Reqwind report code and branding
+===============================
+
+MIT License
+
+Copyright (c) 2026 reqwind contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

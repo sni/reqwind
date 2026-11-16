@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <!-- SPDX-License-Identifier: MIT -->
+  <title id="title">reqwind icon</title>
+  <desc id="desc">Flowing wind lines beside a rising web traffic chart.</desc>
+  <rect width="128" height="128" rx="28" fill="#172B3A"/>
+  <g fill="none" stroke="#55C6E8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 40h24c9 0 14-7 23-7" stroke-width="7"/>
+    <path d="M22 59h31c7 0 11-4 15-10" stroke-width="7"/>
+    <path d="M22 78h20c8 0 13-3 18-8" stroke-width="7"/>
+  </g>
+  <g fill="#E7F7FC">
+    <rect x="72" y="72" width="11" height="34" rx="5.5"/>
+    <rect x="88" y="57" width="11" height="49" rx="5.5"/>
+    <rect x="104" y="42" width="11" height="64" rx="5.5"/>
+  </g>
+  <path d="M69 110h48" fill="none" stroke="#55C6E8" stroke-linecap="round" stroke-width="4" opacity=".9"/>
+</svg>
