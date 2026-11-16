@@ -88,10 +88,18 @@ jobs:
           pattern: reqwind-*
           path: release
           merge-multiple: true
+      - uses: actions/checkout@main
+        with:
+          persist-credentials: false
+      - name: Extract latest changelog block
+        shell: bash
+        run: |
+          awk '/^## / { if (f) exit; f = 1 } f' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
       - uses: softprops/action-gh-release@v3
         with:
           name: v${{ needs.get-version.outputs.version }}
           draft: true
-          generate_release_notes: true
+          body_path: release-notes.md
           fail_on_unmatched_files: true
           files: release/*.tar.gz

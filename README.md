@@ -227,8 +227,8 @@ git push origin v0.0.1
 ```
 
 Use the next release version in place of `v0.0.1`. After all checks and
-builds pass, the workflow creates a **draft** release with generated notes
-and binary archives. Review the notes and publish it on GitHub.
+builds pass, the workflow creates a **draft** release with the newest
+`CHANGELOG.md` block as its notes and binary archives. Review the notes and publish it on GitHub.
 The workflow never publishes a release on its own. It uses `GITHUB_TOKEN`;
 no extra secrets are needed. Repository policy must allow write access to
 release contents.
