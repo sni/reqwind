@@ -215,6 +215,124 @@ func TestArchivePagesAndUnions(t *testing.T) {
 	}
 }
 
+func TestDailyPagesOptional(t *testing.T) {
+	// Off by default: no day pages and no daily summary table.
+	pages := BuildPages("/reports/index.html", archiveFixture())
+	if len(pages) != 15 {
+		t.Fatalf("default page count changed: %d want 15", len(pages))
+	}
+	for _, p := range pages {
+		if strings.Contains(filepath.Base(p.Path), "-day-") {
+			t.Fatalf("day page without the flag: %s", p.Path)
+		}
+	}
+	// On: one page per (all-sites) day, and each month page gains a daily
+	// summary whose rows link to the day pages.
+	r := archiveFixture()
+	r.DailyPages = true
+	pages = BuildPages("/reports/index.html", r)
+	// 3 distinct dates -> 3 extra day pages.
+	if len(pages) != 18 {
+		t.Fatalf("daily page count = %d want 18", len(pages))
+	}
+	dayPages := map[string]bool{}
+	for _, p := range pages {
+		if strings.Contains(filepath.Base(p.Path), "-day-") {
+			dayPages[filepath.Base(p.Path)] = true
+		}
+	}
+	if len(dayPages) != 3 || !dayPages["index-day-2026-01-01.html"] {
+		t.Fatalf("day pages = %v", dayPages)
+	}
+	var jan Report
+	for _, p := range pages {
+		if filepath.Base(p.Path) == "index-month-2026-01.html" {
+			jan = p.Report
+		}
+	}
+	if len(jan.DailySummary) != 1 || jan.DailySummary[0].Name != "2026-01-01" ||
+		!strings.HasSuffix(jan.DailySummary[0].Href, "index-day-2026-01-01.html") ||
+		jan.DailySummary[0].Requests != 7 {
+		t.Fatalf("month daily summary = %+v", jan.DailySummary)
+	}
+	html := mustRender(t, jan)
+	if !strings.Contains(html, `<h2>Daily summary</h2>`) {
+		t.Fatal("month page missing the daily summary table")
+	}
+	// The flag stays off for the sub-pages built by mkReport.
+	if len(jan.Months) != 0 {
+		t.Fatal("month page must not carry month rows")
+	}
+}
+
+func TestDailyPagesFlag(t *testing.T) {
+	// Off: no day pages. On: one page per day, and the month page lists its
+	// days with links to those pages.
+	r := archiveFixture()
+	if n := len(BuildPages("/reports/index.html", r)); n != 15 {
+		t.Fatalf("default page count = %d, want 15 (no day pages)", n)
+	}
+	r.DailyPages = true
+	pages := BuildPages("/reports/index.html", r)
+	if len(pages) != 15+3 {
+		t.Fatalf("page count = %d, want 18 (3 distinct days)", len(pages))
+	}
+	dayPages := map[string]bool{}
+	for _, p := range pages {
+		fn := filepath.Base(p.Path)
+		if strings.Contains(fn, "-day-") {
+			dayPages[fn] = true
+		}
+	}
+	for _, want := range []string{"index-day-2025-12-31.html", "index-day-2026-01-01.html", "index-day-2026-02-01.html"} {
+		if !dayPages[want] {
+			t.Fatalf("missing day page %s: %v", want, dayPages)
+		}
+	}
+	var month *Report
+	for _, p := range pages {
+		if filepath.Base(p.Path) == "index-month-2026-01.html" {
+			month = &p.Report
+		}
+	}
+	if month == nil {
+		t.Fatal("month page missing")
+	}
+	if len(month.DailySummary) != 1 || month.DailySummary[0].Name != "2026-01-01" ||
+		!strings.HasSuffix(month.DailySummary[0].Href, "index-day-2026-01-01.html") {
+		t.Fatalf("month day rows = %+v", month.DailySummary)
+	}
+	if s := month.DailySummary[0]; s.Requests != 7 || s.Visitors != 3 {
+		t.Fatalf("day row totals = %+v", s)
+	}
+	if out := mustRender(t, *month); !strings.Contains(out, `<h2>Daily summary</h2>`) {
+		t.Fatal("month page lacks the daily summary table")
+	}
+	// A one-day page repeats its totals as "per day" averages; hide the table.
+	for _, p := range pages {
+		if !strings.Contains(filepath.Base(p.Path), "-day-") {
+			continue
+		}
+		if out := mustRender(t, p.Report); strings.Contains(out, `<h2>Daily averages</h2>`) {
+			t.Fatalf("single-day page must omit the daily averages table: %s", p.Path)
+		}
+	}
+	// A multi-day page keeps it: the vhost page spans 2025-12-31 to 2026-01-01.
+	var vhost *Report
+	for _, p := range pages {
+		fn := filepath.Base(p.Path)
+		if strings.Contains(fn, "-vhost-") && !strings.Contains(fn, "-year-") && !strings.Contains(fn, "-month-") {
+			vhost = &p.Report
+		}
+	}
+	if vhost == nil {
+		t.Fatal("vhost page missing")
+	}
+	if out := mustRender(t, *vhost); !strings.Contains(out, `<h2>Daily averages</h2>`) {
+		t.Fatal("multi-day page lost the daily averages table")
+	}
+}
+
 func TestPeriodPagesUsePerPeriodVhostTotals(t *testing.T) {
 	// Year and month pages must carry their own per-host rows, not the
 	// all-time totals of the vhost page list.
@@ -281,6 +399,7 @@ func TestSummaryHeadersMatchContext(t *testing.T) {
 				{"Virtual hosts and log sources", "Virtual host", p.Report.VhostSummary},
 				{"Yearly summary", "Period", p.Report.Years},
 				{"Monthly summary", "Period", p.Report.Months},
+				{"Daily summary", "Period", p.Report.DailySummary},
 			} {
 				if len(tc.rows) == 0 {
 					continue
@@ -438,7 +557,7 @@ func TestReportLinksEscapeOutputBasename(t *testing.T) {
 		if page.Report.IndexHref != "" {
 			check(page.Report.IndexHref)
 		}
-		for _, summaries := range [][]Summary{page.Report.Years, page.Report.Months, page.Report.Vhosts, page.Report.VhostSummary} {
+		for _, summaries := range [][]Summary{page.Report.Years, page.Report.Months, page.Report.Vhosts, page.Report.VhostSummary, page.Report.DailySummary} {
 			for _, s := range summaries {
 				check(s.Href)
 			}

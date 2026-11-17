@@ -25,7 +25,9 @@ type Report struct {
 	IndexHref             string
 	MonthlyCharts         bool
 	Years, Months, Vhosts []Summary
-	VhostSummary          []Summary
+	// DailySummary holds one row per day, shown when non-empty.
+	DailySummary []Summary
+	VhostSummary []Summary
 	// ShowDrilldown renders the prefix drilldown section. The all-sites
 	// index leaves it false because the cross-host tree is too large.
 	ShowDrilldown bool
@@ -35,6 +37,9 @@ type Report struct {
 	// OmitDayTable hides the per-day totals table. All-sites yearly reports
 	// set it: with up to 365 rows the table adds little next to the chart.
 	OmitDayTable bool
+	// DailyPages adds per-day pages (and a "Daily summary" table) to the
+	// report site. Off by default: a busy year yields 365 extra pages.
+	DailyPages bool
 	// Palette is the default colour scheme persisted into data-palette;
 	// core validates it to one of ocean, forest or ember.
 	Palette    string
@@ -99,23 +104,25 @@ type reportData struct {
 	Period                string
 	Favicon               template.URL
 	Years, Months, Vhosts []Summary
-	VhostSummary          []Summary
-	ShowDrilldown         bool
-	Live                  bool
-	InvalidLines          int64
-	Days                  []Day // sorted by date
-	T                     totals
-	TopPaths              []top
-	TopErrorPaths         []top
-	TopPathsBytes         []top
-	TopRefs               []top
-	TopAgents             []top
-	TopStatus             []top
-	TopTerms              []top
-	TopClientsRequests    []clientEntry
-	TopClientsBytes       []clientEntry
-	TopCountries          []top
-	HasDays               bool
+	// DailySummary holds one row per day, shown when non-empty.
+	DailySummary       []Summary
+	VhostSummary       []Summary
+	ShowDrilldown      bool
+	Live               bool
+	InvalidLines       int64
+	Days               []Day // sorted by date
+	T                  totals
+	TopPaths           []top
+	TopErrorPaths      []top
+	TopPathsBytes      []top
+	TopRefs            []top
+	TopAgents          []top
+	TopStatus          []top
+	TopTerms           []top
+	TopClientsRequests []clientEntry
+	TopClientsBytes    []clientEntry
+	TopCountries       []top
+	HasDays            bool
 	// HasVhostCharts adds the by-vhost chart anchors to the jump list.
 	HasVhostCharts                                                    bool
 	AvgDenominator                                                    int64 // calendar days from first to last data date
@@ -238,6 +245,7 @@ func buildData(r Report) reportData {
 		Title:             r.Title,
 		IndexHref:         r.IndexHref,
 		Years:             r.Years, Months: r.Months, Vhosts: r.Vhosts,
+		DailySummary:       r.DailySummary,
 		VhostSummary:       r.VhostSummary,
 		Favicon:            template.URL("data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString(assets.Icon)),
 		Live:               r.Live,

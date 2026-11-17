@@ -27,33 +27,36 @@ func BuildPages(index string, report Report) []Page {
 	dir, base := filepath.Dir(index), filepath.Base(index)
 	stem := strings.TrimSuffix(base, filepath.Ext(base))
 	indexHref := url.PathEscape(base)
-	byYear, byMonth, hostDays := map[string][]Day{}, map[string][]Day{}, map[string][]Day{}
+	byYear, byMonth, byDay, hostDays := map[string][]Day{}, map[string][]Day{}, map[string][]Day{}, map[string][]Day{}
 	for _, d := range report.Days {
 		if len(d.Date) != 10 {
 			continue
 		}
 		byYear[d.Date[:4]] = append(byYear[d.Date[:4]], d)
 		byMonth[d.Date[:7]] = append(byMonth[d.Date[:7]], d)
+		byDay[d.Date] = append(byDay[d.Date], d)
 		host := d.Vhost
 		if host == "" {
 			host = "(unknown)"
 		}
 		hostDays[host] = append(hostDays[host], d)
 	}
-	// Per-host yearly/monthly buckets and a stable page identity per host.
+	// Per-host yearly/monthly/daily buckets and a stable page identity per host.
 	type hostRef struct {
 		name   string
 		hash   string
 		days   []Day
 		years  map[string][]Day
 		months map[string][]Day
+		dates  map[string][]Day
 	}
 	hosts := map[string]*hostRef{}
 	for _, h := range sortedDayKeys(hostDays, false) {
-		ref := &hostRef{days: hostDays[h], years: map[string][]Day{}, months: map[string][]Day{}}
+		ref := &hostRef{days: hostDays[h], years: map[string][]Day{}, months: map[string][]Day{}, dates: map[string][]Day{}}
 		for _, d := range ref.days {
 			ref.years[d.Date[:4]] = append(ref.years[d.Date[:4]], d)
 			ref.months[d.Date[:7]] = append(ref.months[d.Date[:7]], d)
+			ref.dates[d.Date] = append(ref.dates[d.Date], d)
 		}
 		// Guess only the display name; keep source groups and their URLs stable.
 		ref.name = inferSiteName(h, ref.days)
@@ -101,9 +104,25 @@ func BuildPages(index string, report Report) []Page {
 	}
 	for _, month := range sortedDayKeys(byMonth, true) {
 		href := stem + "-month-" + month + ".html"
-		addPage(href, mkReport(month, "month-"+month, byMonth[month]))
+		mp := mkReport(month, "month-"+month, byMonth[month])
+		// The day rows of a month page link to the per-day pages, so that
+		// page keeps the per-day totals table (one day per host per day).
+		if report.DailyPages {
+			for _, day := range sortedDayKeys(byDay, false) {
+				if day[:7] != month {
+					continue
+				}
+				mp.DailySummary = append(mp.DailySummary, sumOf(day, stem+"-day-"+day+".html", byDay[day]))
+			}
+		}
+		addPage(href, mp)
 		if days := indexMonths[month]; len(days) > 0 {
 			indexReport.Months = append(indexReport.Months, sumOf(month, href, days))
+		}
+	}
+	if report.DailyPages {
+		for _, day := range sortedDayKeys(byDay, false) {
+			addPage(stem+"-day-"+day+".html", mkReport(day, "", byDay[day]))
 		}
 	}
 	hostNames := make([]string, 0, len(hosts))

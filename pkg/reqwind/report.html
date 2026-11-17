@@ -148,7 +148,8 @@ footer{margin-top:2rem;color:var(--muted);font-size:.82rem}
 {{if .VhostSummary}}<section class="summary"><h2>Virtual hosts and log sources</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Virtual host"}}{{template "summary" .VhostSummary}}</table></section>{{end}}
 {{if .Years}}<section class="summary"><h2>Yearly summary</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Period"}}{{template "summary" .Years}}</table></section>{{end}}
 {{if .Months}}<section class="summary" id="monthly-summary"><h2>Monthly summary</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Period"}}{{template "summary" .Months}}</table></section>{{end}}
-{{if and .HasDays .AvgDenominator}}
+{{if .DailySummary}}<section class="summary" id="daily-summary"><h2>Daily summary</h2><table class="report-summary" aria-label="Report summary">{{template "summary-header" "Period"}}{{template "summary" .DailySummary}}</table></section>{{end}}
+{{if and .HasDays (gt .AvgDenominator 1)}}
 <section class="summary"><h2>Daily averages</h2><p class="meta">Across {{.AvgDenominator}} calendar days, including zero-traffic gaps.</p>
 <table><thead><tr><th scope="col">Metric</th><th scope="col" class="num">Per calendar day</th><th scope="col" class="num">Rate</th></tr></thead><tbody>
 <tr><th scope="row">Hits</th><td class="num">{{printf "%.2f" .AvgRequests}}</td><td class="num">{{printf "%.6f" (perSecond .AvgRequests)}} /s</td></tr>

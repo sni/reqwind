@@ -29,7 +29,7 @@ import (
 //
 // shortcut: expired snapshot pages are never deleted; remove old snapshot
 // output directories by hand.
-func renderStateReports(paths []string, output string, now time.Time, palette string, hashClients, externalECharts bool, out io.Writer) error {
+func renderStateReports(paths []string, output string, now time.Time, palette string, hashClients, externalECharts, dailyPages bool, out io.Writer) error {
 	states := make([]*State, 0, len(paths))
 	inputs, reserved := []string{}, []string{}
 	seen := map[string]bool{}
@@ -83,6 +83,7 @@ func renderStateReports(paths []string, output string, now time.Time, palette st
 		// source states stored.
 		GeoEnabled:      true,
 		ExternalECharts: externalECharts,
+		DailyPages:      dailyPages,
 	}
 	for _, s := range states {
 		report.InvalidLines += s.InvalidLines

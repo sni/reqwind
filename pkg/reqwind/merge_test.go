@@ -143,7 +143,7 @@ func TestMergeSnapshotTimezones(t *testing.T) {
 		t.Fatal(err)
 	}
 	withLocal(t, "Europe/Berlin", func() {
-		err := renderStateReports([]string{dir + "/a.json", dir + "/b.json"}, filepath.Join(site, "index.html"), time.Now(), "ocean", false, false, io.Discard)
+		err := renderStateReports([]string{dir + "/a.json", dir + "/b.json"}, filepath.Join(site, "index.html"), time.Now(), "ocean", false, false, false, io.Discard)
 		if err != nil {
 			t.Fatalf("UTC snapshots rejected under Berlin: %v", err)
 		}
@@ -164,7 +164,7 @@ func TestMergeSnapshotTimezones(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "a.json"), b, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err := renderStateReports([]string{dir + "/a.json"}, filepath.Join(dir, "site", "index.html"), time.Now(), "ocean", false, false, io.Discard); err == nil || !strings.Contains(err.Error(), "replay") {
+	if err := renderStateReports([]string{dir + "/a.json"}, filepath.Join(dir, "site", "index.html"), time.Now(), "ocean", false, false, false, io.Discard); err == nil || !strings.Contains(err.Error(), "replay") {
 		t.Fatalf("non-UTC snapshot accepted: %v", err)
 	}
 }
@@ -188,7 +188,7 @@ func testRenderStateReportsPublish(t *testing.T) {
 	}
 	out := filepath.Join(site, "index.html")
 	var buf bytes.Buffer
-	err := renderStateReports([]string{a, b}, out, now, "forest", false, false, &buf)
+	err := renderStateReports([]string{a, b}, out, now, "forest", false, false, false, &buf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func testRenderStateReportsPublish(t *testing.T) {
 			t.Fatalf("%s not rejected: %v", what, err)
 		}
 	}
-	if err := renderStateReports([]string{a, a}, out, now, "ocean", false, false, io.Discard); err == nil || !strings.Contains(err.Error(), "duplicate") {
+	if err := renderStateReports([]string{a, a}, out, now, "ocean", false, false, false, io.Discard); err == nil || !strings.Contains(err.Error(), "duplicate") {
 		t.Fatalf("duplicate input not rejected: %v", err)
 	}
 	// A hardlinked output alias of a source state is rejected.
@@ -231,16 +231,16 @@ func testRenderStateReportsPublish(t *testing.T) {
 	if err := os.Link(a, alias); err != nil {
 		t.Fatal(err)
 	}
-	err = renderStateReports([]string{a, b}, alias, now, "ocean", false, false, io.Discard)
+	err = renderStateReports([]string{a, b}, alias, now, "ocean", false, false, false, io.Discard)
 	fail(err, "overlaps", "output alias of source state")
 	// A source's lock file is a reserved output target even when absent.
-	err = renderStateReports([]string{a, b}, a+".lock", now, "ocean", false, false, io.Discard)
+	err = renderStateReports([]string{a, b}, a+".lock", now, "ocean", false, false, false, io.Discard)
 	fail(err, "overlap", "output path of source lock")
 	// Missing and malformed sources fail.
-	err = renderStateReports([]string{a, filepath.Join(dir, "missing.json")}, out, now, "ocean", false, false, io.Discard)
+	err = renderStateReports([]string{a, filepath.Join(dir, "missing.json")}, out, now, "ocean", false, false, false, io.Discard)
 	fail(err, "no such file", "missing source")
 	bad := filepath.Join(dir, "bad.json")
 	writeTest(t, bad, "{not json")
-	err = renderStateReports([]string{bad}, out, now, "ocean", false, false, io.Discard)
+	err = renderStateReports([]string{bad}, out, now, "ocean", false, false, false, io.Discard)
 	fail(err, "invalid state", "malformed source")
 }

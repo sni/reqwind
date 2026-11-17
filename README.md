@@ -4,7 +4,7 @@
 
 reqwind is an Apache/nginx access-log analyzer written in Go. One binary reads
 multiple logs and writes a static HTML index with year, month, and vhost
-reports. Each page carries its own styles; the chart library (Apache ECharts)
+reports, plus optional per-day pages. Each page carries its own styles; the chart library (Apache ECharts)
 and world map load from two shared files (`echarts.min.js`,
 `world.geo.json`) written beside the index. `-inline-assets` embeds them into
 every page instead. No database, server, or runtime network requests.
@@ -45,6 +45,8 @@ Open `index.html` or publish the generated files with your static web server.
 ./reqwind -hash-clients access.log
 # Embed the chart library and world map into every page instead of shared files
 ./reqwind -inline-assets access.log
+# Add per-day summary pages (off by default: a year adds 365 pages)
+./reqwind -daily-pages access.log
 ./reqwind -merge-state machine-a -merge-state machine-b -output combined/index.html
 ./reqwind -help
 ./reqwind -version
@@ -75,7 +77,9 @@ before removing them by hand. Session
 updates do not recreate removed months; new log records for those months do.
 
 Reports link to year, month, and vhost pages beside the index. Publish the
-pages together. Each page works without remote assets. Charts require
+pages together. With `-daily-pages`, each month page also lists its days and
+links to one page per day; the flag is off by default because a year of data
+adds 365 pages. Each page works without remote assets. Charts require
 JavaScript; tables and path drilldowns stay readable without it. The all-sites
 index shows only the trailing 12 months, ending with the latest data month,
 except for its yearly summary, which keeps the full history. Detail pages

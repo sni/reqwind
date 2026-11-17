@@ -39,6 +39,7 @@ func Run(ctx context.Context, args []string, out io.Writer) error {
 	geoDB := fs.String("geo-db", "", "local GeoIP database (default auto-detect; off disables lookup)")
 	hashClients := fs.Bool("hash-clients", false, "store and show HMAC identifiers instead of raw client IPs")
 	noExternalAssets := fs.Bool("inline-assets", false, "embed the chart library and world map into every page instead of the shared files (default)")
+	dailyPages := fs.Bool("daily-pages", false, "add per-day summary pages (off by default: a year of data adds 365 pages)")
 	interval := fs.Duration("interval", 2*time.Second, "live polling interval")
 	fs.Usage = func() {
 		fmt.Fprintln(out, "Usage: reqwind [options] [access.log ...]\n       reqwind -merge-state path-or-glob [-merge-state path-or-glob ...] [options]\nLogs may be quoted glob patterns. Defaults to standard Apache/nginx paths.")
@@ -92,7 +93,7 @@ func Run(ctx context.Context, args []string, out io.Writer) error {
 		if err != nil {
 			return err
 		}
-		return renderStateReports(paths, outputAbs, time.Now(), *palette, *hashClients, !*noExternalAssets, out)
+		return renderStateReports(paths, outputAbs, time.Now(), *palette, *hashClients, !*noExternalAssets, *dailyPages, out)
 	}
 	patterns := fs.Args()
 	for _, mapping := range vhosts {
@@ -182,7 +183,7 @@ func Run(ctx context.Context, args []string, out io.Writer) error {
 			total.Bytes += st.Bytes
 		}
 		report := s.report(now, *live)
-		report.Palette, report.GeoEnabled = *palette, lookup != nil
+		report.Palette, report.GeoEnabled, report.DailyPages = *palette, lookup != nil, *dailyPages
 		if !*noExternalAssets {
 			report.ExternalECharts = true
 			if err := writeSharedAssets(outputAbs); err != nil {

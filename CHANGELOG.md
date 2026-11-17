@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `-daily-pages` flag for optional per-day summary pages.
+
 ## v0.0.1 - 2026-11-16
 
 ### Added
