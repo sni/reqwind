@@ -122,7 +122,10 @@ func BuildPages(index string, report Report) []Page {
 	}
 	if report.DailyPages {
 		for _, day := range sortedDayKeys(byDay, false) {
-			addPage(stem+"-day-"+day+".html", mkReport(day, "", byDay[day]))
+			// A per-day page has nothing to trend; drop its per-period charts.
+			dr := mkReport(day, "", byDay[day])
+			dr.OmitPeriodCharts = true
+			addPage(stem+"-day-"+day+".html", dr)
 		}
 	}
 	hostNames := make([]string, 0, len(hosts))

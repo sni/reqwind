@@ -79,7 +79,9 @@ updates do not recreate removed months; new log records for those months do.
 Reports link to year, month, and vhost pages beside the index. Publish the
 pages together. With `-daily-pages`, each month page also lists its days and
 links to one page per day; the flag is off by default because a year of data
-adds 365 pages. Each page works without remote assets. Charts require
+adds 365 pages. Per-day pages skip the per-day charts — requests, traffic,
+and visits per day have nothing to trend in one point — but keep the hourly,
+map, and top-list sections. Each page works without remote assets. Charts require
 JavaScript; tables and path drilldowns stay readable without it. The all-sites
 index shows only the trailing 12 months, ending with the latest data month,
 except for its yearly summary, which keeps the full history. Detail pages

@@ -191,12 +191,17 @@ func TestArchivePagesAndUnions(t *testing.T) {
 				t.Fatalf("missing %s", want)
 			}
 		}
-		// The combined charts and the section anchors replace the per-metric
-		// SVG chart titles; at least one chart anchor and the search-terms
-		// section must render.
-		for _, want := range []string{`id="activity-chart"`, `href="#activity-chart"`, "Search engine terms"} {
+		// Per-day pages skip the combined charts and their sidebar anchors
+		// (one day has no trend); every other page keeps them.
+		wantCharts := !p.Report.OmitPeriodCharts
+		for _, want := range []string{"Search engine terms"} {
 			if !strings.Contains(html, want) {
 				t.Fatalf("missing %s", want)
+			}
+		}
+		for _, want := range []string{`id="activity-chart"`, `href="#activity-chart"`} {
+			if (strings.Contains(html, want)) != wantCharts {
+				t.Fatalf("activity chart anchor presence wrong for %s", p.Path)
 			}
 		}
 		if p.Path != pages[0].Path && (p.Report.MonthlyCharts || !strings.Contains(html, "All sites · index")) {

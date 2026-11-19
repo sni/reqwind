@@ -111,10 +111,10 @@ func writeSharedAssets(index string) error {
 // library and world-map geometry inline so each page is fully self-contained.
 // chartHTMLFull controls whether the assets are shared files instead.
 func chartHTML(days []Day, monthly bool) template.HTML {
-	return chartHTMLFull(days, monthly, false, false)
+	return chartHTMLFull(days, monthly, false, false, false)
 }
 
-func chartHTMLFull(days []Day, monthly, externalECharts, omitDayTable bool) template.HTML {
+func chartHTMLFull(days []Day, monthly, externalECharts, omitDayTable, omitPeriodCharts bool) template.HTML {
 	prefix := 10
 	unit := "day"
 	if monthly {
@@ -256,36 +256,41 @@ func chartHTMLFull(days []Day, monthly, externalECharts, omitDayTable bool) temp
 		return template.HTML("")
 	}
 
-	parts := []string{
-		`<section id="activity-chart" class="summary" aria-label="Activity chart">`,
-		`<h2>Requests / visitors / files / pages per ` + unit + `</h2>`,
-		activityBody(unit, periods, &data, omitDayTable),
-		`</section>`,
-	}
-	// By-vhost sections appear only when the page holds more than one host;
-	// a single-host page would only repeat the combined charts.
-	if data.HasDays && len(data.VhostSeries) > 1 {
+	parts := []string{}
+	// A per-day page has nothing to trend; skip the per-period charts and
+	// keep the rest of the page. Month pages keep them even with one day.
+	if !omitPeriodCharts {
 		parts = append(parts,
-			`<section id="vhost-requests-chart" class="summary" aria-label="Requests by virtual host">`,
-			`<h2>Requests per `+unit+` by virtual host</h2>`,
-			vhostBody(unit, &data, false),
+			`<section id="activity-chart" class="summary" aria-label="Activity chart">`,
+			`<h2>Requests / visitors / files / pages per `+unit+`</h2>`,
+			activityBody(unit, periods, &data, omitDayTable),
+			`</section>`)
+		// By-vhost sections appear only when the page holds more than one
+		// host; a single-host page would only repeat the combined charts.
+		if len(data.VhostSeries) > 1 {
+			parts = append(parts,
+				`<section id="vhost-requests-chart" class="summary" aria-label="Requests by virtual host">`,
+				`<h2>Requests per `+unit+` by virtual host</h2>`,
+				vhostBody(unit, &data, false),
+				`</section>`,
+				`<section id="vhost-traffic-chart" class="summary" aria-label="Traffic by virtual host">`,
+				`<h2>Traffic per `+unit+` by virtual host</h2>`,
+				vhostBody(unit, &data, true),
+				`</section>`)
+		}
+		parts = append(parts,
+			`<section id="traffic-chart" class="summary" aria-label="Traffic chart">`,
+			`<h2>Traffic per `+unit+`</h2>`,
+			chartDiv("rw-chart-traffic", "Traffic per "+unit+" in bytes"),
+			periodTable(unit, periods, true),
 			`</section>`,
-			`<section id="vhost-traffic-chart" class="summary" aria-label="Traffic by virtual host">`,
-			`<h2>Traffic per `+unit+` by virtual host</h2>`,
-			vhostBody(unit, &data, true),
+			`<section id="visits-chart" class="summary" aria-label="Visits chart">`,
+			`<h2>Visits per `+unit+`</h2>`,
+			chartDiv("rw-chart-visits", "Visits per "+unit),
+			periodTable(unit, periods, false),
 			`</section>`)
 	}
 	parts = append(parts,
-		`<section id="traffic-chart" class="summary" aria-label="Traffic chart">`,
-		`<h2>Traffic per `+unit+`</h2>`,
-		chartDiv("rw-chart-traffic", "Traffic per "+unit+" in bytes"),
-		periodTable(unit, periods, true),
-		`</section>`,
-		`<section id="visits-chart" class="summary" aria-label="Visits chart">`,
-		`<h2>Visits per `+unit+`</h2>`,
-		chartDiv("rw-chart-visits", "Visits per "+unit),
-		periodTable(unit, periods, false),
-		`</section>`,
 		`<section id="hours-chart" class="summary" aria-label="Hours chart">`,
 		`<h2>Requests by hour of day (local time, all days)</h2>`,
 		`<p class="meta">UTC-hour intervals grouped by their local start time.</p>`,

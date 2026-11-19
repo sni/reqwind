@@ -37,6 +37,9 @@ type Report struct {
 	// OmitDayTable hides the per-day totals table. All-sites yearly reports
 	// set it: with up to 365 rows the table adds little next to the chart.
 	OmitDayTable bool
+	// OmitPeriodCharts hides the per-period charts (activity, traffic,
+	// visits). Per-day pages set it: one day has nothing to trend.
+	OmitPeriodCharts bool
 	// DailyPages adds per-day pages (and a "Daily summary" table) to the
 	// report site. Off by default: a busy year yields 365 extra pages.
 	DailyPages bool
@@ -123,6 +126,9 @@ type reportData struct {
 	TopClientsBytes    []clientEntry
 	TopCountries       []top
 	HasDays            bool
+	// HasPeriodCharts adds the per-period chart anchors to the jump list;
+	// single-period pages (one day, or one month) have no trend charts.
+	HasPeriodCharts bool
 	// HasVhostCharts adds the by-vhost chart anchors to the jump list.
 	HasVhostCharts                                                    bool
 	AvgDenominator                                                    int64 // calendar days from first to last data date
@@ -224,6 +230,9 @@ func buildData(r Report) reportData {
 		}
 	}
 
+	// Per-day pages have nothing to trend; month and year pages keep the
+	// per-period charts even with a single period of data.
+	periodCharts := !r.OmitPeriodCharts
 	// The all-sites index hides the drilldown; skip building the tree for it.
 	var drilldown template.HTML
 	if r.ShowDrilldown {
@@ -238,7 +247,7 @@ func buildData(r Report) reportData {
 	d := reportData{
 		Version:           Version,
 		Logo:              template.URL("data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString(assets.Logo)),
-		InteractiveCharts: chartHTMLFull(chartSource, r.MonthlyCharts, r.ExternalECharts, omitDayTable),
+		InteractiveCharts: chartHTMLFull(chartSource, r.MonthlyCharts, r.ExternalECharts, omitDayTable, r.OmitPeriodCharts),
 		PathDrilldown:     drilldown,
 		ShowDrilldown:     r.ShowDrilldown,
 		Generated:         r.Generated,
@@ -263,8 +272,11 @@ func buildData(r Report) reportData {
 		TopClientsBytes:    topClients(clients, 10, true),
 		TopCountries:       topN(countries, 10),
 		HasDays:            len(days) > 0,
-		HasVhostCharts:     distinctHosts(chartSource) > 1,
-		GeoEnabled:         r.GeoEnabled,
+		HasPeriodCharts:    periodCharts,
+		// The by-vhost chart anchors show only with a multi-period page and
+		// more than one host.
+		HasVhostCharts: distinctHosts(chartSource) > 1 && periodCharts,
+		GeoEnabled:     r.GeoEnabled,
 	}
 	// Failsafe: only the three known palette values may reach the DOM.
 	switch r.Palette {

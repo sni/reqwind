@@ -318,7 +318,7 @@ func TestVhostChartsOnlyWithMultipleHosts(t *testing.T) {
 func TestChartTablesCollapsed(t *testing.T) {
 	out := string(chartHTML([]Day{{Date: "2026-11-01", Requests: 5, Bytes: 2048, Visits: 3,
 		Hours: [24]int64{5}, CountryVisitors: map[string]map[string]bool{"US": {"a": true}},
-	}}, false))
+	}, {Date: "2026-11-02", Requests: 1, Bytes: 100, Visits: 1}}, false))
 	for _, id := range []string{"activity-chart", "traffic-chart", "visits-chart", "hours-chart", "country-map"} {
 		start := strings.Index(out, `id="`+id+`"`)
 		section := out[start : start+strings.Index(out[start:], `</section>`)]
@@ -333,17 +333,52 @@ func TestChartTablesCollapsed(t *testing.T) {
 	}
 }
 
+func TestDayPageOmitsPerPeriodCharts(t *testing.T) {
+	// A per-day page has nothing to trend: its per-period charts and tables
+	// are omitted; the hours and map sections stay.
+	out := string(chartHTMLFull([]Day{{Date: "2026-11-01", Requests: 5, Bytes: 2048, Visits: 3,
+		Hours: [24]int64{5}, CountryVisitors: map[string]map[string]bool{"US": {"a": true}},
+	}}, false, false, false, true))
+	for _, banned := range []string{`id="activity-chart"`, `id="traffic-chart"`, `id="visits-chart"`, `Per-day totals`, `Per-day traffic`, `Per-day visits`} {
+		if strings.Contains(out, banned) {
+			t.Fatalf("day page must not render %q", banned)
+		}
+	}
+	for _, kept := range []string{`id="hours-chart"`, `id="country-map"`} {
+		if !strings.Contains(out, kept) {
+			t.Fatalf("day page lost %q", kept)
+		}
+	}
+	// Month pages keep the charts even with a single day of data.
+	m := string(chartHTML([]Day{{Date: "2026-11-01", Requests: 5}}, true))
+	for _, kept := range []string{`id="activity-chart"`, `id="traffic-chart"`, `id="visits-chart"`} {
+		if !strings.Contains(m, kept) {
+			t.Fatalf("single-day month page lost %q", kept)
+		}
+	}
+	// Day pages hide the by-vhost anchors too; a single-day month page with
+	// two hosts still shows them.
+	if d := buildData(Report{Days: []Day{{Date: "2026-11-01", Vhost: "one.example", Requests: 3},
+		{Date: "2026-11-01", Vhost: "two.example", Requests: 2}}, OmitPeriodCharts: true}); d.HasVhostCharts {
+		t.Fatal("day page must not advertise by-vhost charts")
+	}
+	if dm := buildData(Report{Days: []Day{{Date: "2026-11-01", Vhost: "one.example"},
+		{Date: "2026-11-01", Vhost: "two.example"}}, MonthlyCharts: true}); !dm.HasVhostCharts {
+		t.Fatal("single-day month page must keep the by-vhost chart anchors")
+	}
+}
+
 func TestIndexOmitsPerDayTotalsTable(t *testing.T) {
-	days := []Day{{Date: "2026-11-01", Requests: 5, Bytes: 2048, Visits: 3}}
+	days := []Day{{Date: "2026-11-01", Requests: 5, Bytes: 2048, Visits: 3}, {Date: "2026-11-02", Requests: 1, Bytes: 100, Visits: 1}}
 	// A detail page keeps the per-day totals table; the index drops it.
 	if out := chartHTML(days, false); !strings.Contains(string(out), `<summary>Per-day totals</summary>`) {
 		t.Fatal("detail page must keep the per-day totals table")
 	}
-	if out := chartHTMLFull(days, false, false, true); strings.Contains(string(out), `<summary>Per-day totals</summary>`) {
+	if out := chartHTMLFull(days, false, false, true, false); strings.Contains(string(out), `<summary>Per-day totals</summary>`) {
 		t.Fatal("index must omit the per-day totals table")
 	}
 	// The chart itself is still present on the index.
-	if out := chartHTMLFull(days, false, false, true); !strings.Contains(string(out), `id="rw-chart-activity"`) {
+	if out := chartHTMLFull(days, false, false, true, false); !strings.Contains(string(out), `id="rw-chart-activity"`) {
 		t.Fatal("index must still render the activity chart")
 	}
 }
@@ -386,7 +421,7 @@ func TestExternalEChartsReference(t *testing.T) {
 		t.Fatal("default page must not reference an external library")
 	}
 	// External mode references the shared files and skips the inline copies.
-	out := string(chartHTMLFull(days, false, true, false))
+	out := string(chartHTMLFull(days, false, true, false, false))
 	if !strings.Contains(out, `<script src="echarts.min.js"></script>`) {
 		t.Fatal("external page must reference echarts.min.js")
 	}
@@ -512,7 +547,7 @@ func BenchmarkChartPathCardinality(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				chartHTMLFull(days, false, true, true)
+				chartHTMLFull(days, false, true, true, false)
 			}
 		})
 	}
